@@ -1,29 +1,28 @@
 --====================================================================
---  ASTRA PROJECT | FULL HUB v12
+--  ASTRA PROJECT | FULL HUB v13
 --  PART 1 / 2
---  Скопируй эту часть, затем вставь Часть 2 СРАЗУ после неё
+--  Вставь Часть 2 сразу после маркера в конце этого файла
 --====================================================================
 
 --====================================================================
 --  SERVICES
 --====================================================================
-local Players           = game:GetService("Players")
-local RunService        = game:GetService("RunService")
-local UserInputService  = game:GetService("UserInputService")
-local CoreGui           = game:GetService("CoreGui")
-local Lighting          = game:GetService("Lighting")
-local TweenService      = game:GetService("TweenService")
-local Debris            = game:GetService("Debris")
-local Workspace         = game:GetService("Workspace")
-local StarterGui        = game:GetService("StarterGui")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+local Workspace = game:GetService("Workspace")
+local StarterGui = game:GetService("StarterGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local SoundService      = game:GetService("SoundService")
+local SoundService = game:GetService("SoundService")
 local CollectionService = game:GetService("CollectionService")
-local HttpService       = game:GetService("HttpService")
+local HttpService = game:GetService("HttpService")
 
-local LP  = Players.LocalPlayer
+local LP = Players.LocalPlayer
 local Cam = Workspace.CurrentCamera
-
 Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Cam = Workspace.CurrentCamera
 end)
@@ -70,12 +69,6 @@ end
 local newc = newcclosure or function(f) return f end
 local chkc = checkcaller or function() return false end
 
-local function clamp(v, a, b)
-    if v < a then return a end
-    if v > b then return b end
-    return v
-end
-
 --====================================================================
 --  CONFIG
 --====================================================================
@@ -108,7 +101,6 @@ local C = {
     NoRecoil = true,
     NoSpread = true,
     MuteShot = true,
-    MuteWeaponSounds = true,
 
     -- Bullet Lines (только после подтверждённого хита)
     BL = true,
@@ -156,7 +148,7 @@ local C = {
     HandChamsC = Color3.fromRGB(160, 40, 255),
     HandChamsT = 0.5,
 
-    -- World / Lighting
+    -- World
     FB = true,
     NF = true,
     SkyOn = true,
@@ -191,41 +183,33 @@ end
 --====================================================================
 --  THEME (Nyxon Project)
 --====================================================================
-local BG        = Color3.fromRGB(20, 20, 24)
-local PANEL     = Color3.fromRGB(24, 24, 29)
-local DROPBG    = Color3.fromRGB(22, 22, 27)
-local BARBG     = Color3.fromRGB(28, 28, 34)
-local CHECKBG   = Color3.fromRGB(26, 26, 31)
-local WHITE     = Color3.fromRGB(235, 235, 235)
-local GRAY      = Color3.fromRGB(145, 145, 150)
-local BORDER_C  = Color3.fromRGB(255, 25, 25)
-local ACCENT_C  = Color3.fromRGB(255, 25, 25)
+local BG = Color3.fromRGB(20, 20, 24)
+local PANEL = Color3.fromRGB(24, 24, 29)
+local DROPBG = Color3.fromRGB(22, 22, 27)
+local BARBG = Color3.fromRGB(28, 28, 34)
+local CHECKBG = Color3.fromRGB(26, 26, 31)
+local WHITE = Color3.fromRGB(235, 235, 235)
+local GRAY = Color3.fromRGB(145, 145, 150)
+local BORDER_COLOR = Color3.fromRGB(255, 25, 25)
+local ACCENT_COLOR = Color3.fromRGB(255, 25, 25)
 
 local BorderRegistry = {}
 local AccentRegistry = {}
 
 local function RegisterBorder(obj, property)
-    table.insert(BorderRegistry, {
-        object = obj,
-        property = property or "Color"
-    })
+    table.insert(BorderRegistry, { object = obj, property = property or "Color" })
 end
 
 local function RegisterAccent(obj, property)
-    table.insert(AccentRegistry, {
-        object = obj,
-        property = property or "BackgroundColor3"
-    })
+    table.insert(AccentRegistry, { object = obj, property = property or "BackgroundColor3" })
 end
 
 local function SetBorderColor(color)
-    BORDER_C = color
+    BORDER_COLOR = color
     for i = #BorderRegistry, 1, -1 do
         local item = BorderRegistry[i]
         if item.object and item.object.Parent then
-            pcall(function()
-                item.object[item.property] = color
-            end)
+            pcall(function() item.object[item.property] = color end)
         else
             table.remove(BorderRegistry, i)
         end
@@ -233,24 +217,66 @@ local function SetBorderColor(color)
 end
 
 local function SetAccentColor(color)
-    ACCENT_C = color
+    ACCENT_COLOR = color
     for i = #AccentRegistry, 1, -1 do
         local item = AccentRegistry[i]
         if item.object and item.object.Parent then
-            pcall(function()
-                item.object[item.property] = color
-            end)
+            pcall(function() item.object[item.property] = color end)
         else
             table.remove(AccentRegistry, i)
         end
     end
 end
 
+local function Stroke(parent, thickness)
+    local s = Instance.new("UIStroke")
+    s.Color = BORDER_COLOR
+    s.Thickness = thickness or 1
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    s.Parent = parent
+    RegisterBorder(s, "Color")
+    return s
+end
+
+local function Text(parent, value, position, size, textSize, color)
+    local l = Instance.new("TextLabel")
+    l.Position = position
+    l.Size = size
+    l.BackgroundTransparency = 1
+    l.BorderSizePixel = 0
+    l.Text = value
+    l.TextColor3 = color or WHITE
+    l.Font = Enum.Font.Code
+    l.TextSize = textSize or 13
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.TextYAlignment = Enum.TextYAlignment.Center
+    l.Parent = parent
+    return l
+end
+
+local function Line(parent, y)
+    local l = Instance.new("Frame")
+    l.Position = UDim2.new(0, 0, 0, y)
+    l.Size = UDim2.new(1, 0, 0, 1)
+    l.BackgroundColor3 = ACCENT_COLOR
+    l.BorderSizePixel = 0
+    l.Parent = parent
+    RegisterAccent(l, "BackgroundColor3")
+    return l
+end
+
+local function Corner(parent, r)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, r or 4)
+    c.Parent = parent
+    return c
+end
+
 --====================================================================
 --  TEAM CHECK (TeamSystem + ClanId)
 --====================================================================
 local TeamSystem = ReplicatedStorage:FindFirstChild("TeamSystem")
-local TeamState  = TeamSystem and TeamSystem:FindFirstChild("TeamState")
+local TeamState = TeamSystem and TeamSystem:FindFirstChild("TeamState")
 local myTeamMembers = {}
 local myTeamId = nil
 
@@ -288,7 +314,7 @@ end
 --  WEAPON SETTINGS CACHE + TWEAK
 --====================================================================
 local settingsCache = setmetatable({}, { __mode = "k" })
-local spreadState   = setmetatable({}, { __mode = "k" })
+local spreadState = setmetatable({}, { __mode = "k" })
 
 local function tweakSettings(S)
     pcall(function()
@@ -301,7 +327,7 @@ local function tweakSettings(S)
             S.RecoilYawMult = 0
             S.RecoilPitchMult = 0
         end
-        if C.MuteShot or C.MuteWeaponSounds then
+        if C.MuteShot then
             S.GunshotVolume = 0
         end
         if C.RapidFire then
@@ -346,9 +372,7 @@ local function watchTools()
     end
     local function hookContainer(c)
         if not c then return end
-        for _, t in ipairs(c:GetChildren()) do
-            onTool(t)
-        end
+        for _, t in ipairs(c:GetChildren()) do onTool(t) end
         c.ChildAdded:Connect(onTool)
     end
     local function onChar(ch)
@@ -367,11 +391,10 @@ watchTools()
 
 --====================================================================
 --  SPREAD: consumeSpread / applySpread / compensate
---  (точные копии из клиента игры)
 --====================================================================
 local function consumeSpread(st, S, isADS, t)
     local base = S.HipSpreadDegrees or 0
-    local ads  = S.ADSSpreadDegrees or base
+    local ads = S.ADSSpreadDegrees or base
     if isADS then base = ads or base end
     local rec = S.SpreadRecoveryPerSec or 0
     local since
@@ -383,7 +406,7 @@ local function consumeSpread(st, S, isADS, t)
     if rec > 0 then
         base = math.max(base, st.cur - rec * since)
     end
-    local maxS   = S.SpreadMaxDegrees or base
+    local maxS = S.SpreadMaxDegrees or base
     local hipInc = S.HipSpreadIncreasePerShot
     local adsInc = S.ADSSpreadIncreasePerShot
     local inc = (type(hipInc) ~= "number") and (S.SpreadIncreasePerShot or 0) or hipInc
@@ -391,7 +414,7 @@ local function consumeSpread(st, S, isADS, t)
         adsInc = S.SpreadIncreasePerShot or inc
     end
     if isADS then inc = adsInc or inc end
-    st.cur   = math.min(maxS, base + inc)
+    st.cur = math.min(maxS, base + inc)
     st.lastT = t
     return base
 end
@@ -399,18 +422,18 @@ end
 local function applySpread(dir, seed, seq, deg)
     if type(deg) ~= "number" or deg <= 0 then return dir end
     local tn = math.tan(math.rad(deg))
-    local s  = math.floor(tonumber(seed) or 1)
+    local s = math.floor(tonumber(seed) or 1)
     local sq = math.floor(tonumber(seq) or 0)
-    local k  = (s + sq * 48271 + 12820163) % 2147483647
+    local k = (s + sq * 48271 + 12820163) % 2147483647
     local rng = Random.new(k <= 0 and 1 or k)
     local r1 = rng:NextNumber()
     local r2 = rng:NextNumber()
-    local r  = math.sqrt(r1) * tn
+    local r = math.sqrt(r1) * tn
     local th = r2 * math.pi * 2
-    local d  = dir.Unit
+    local d = dir.Unit
     local up = Vector3.new(0, 1, 0)
     local right = d:Cross(math.abs(d:Dot(up)) > 0.95 and Vector3.new(1, 0, 0) or up).Unit
-    local upv   = right:Cross(d).Unit
+    local upv = right:Cross(d).Unit
     return (d + right * (math.cos(th) * r) + upv * (math.sin(th) * r)).Unit
 end
 
@@ -440,9 +463,9 @@ local function visible(origin, part, model)
 end
 
 local function candidateParts(char)
-    local head  = char:FindFirstChild("Head")
+    local head = char:FindFirstChild("Head")
     local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
-    local root  = char:FindFirstChild("HumanoidRootPart")
+    local root = char:FindFirstChild("HumanoidRootPart")
     local tp = C.TargetPart
     local list = {}
     local function add(p)
@@ -630,7 +653,7 @@ local function getBestMuzzle(targetPos)
 end
 
 --====================================================================
---  PENDING SHOTS (для булет лайнов только после хита)
+--  PENDING SHOTS (булет лайны только после хита)
 --====================================================================
 local pendingShots = {}
 
@@ -700,12 +723,10 @@ local function drawBeam(a, b, color, width, lifetime)
     })
     glow.Parent = folder
     TweenService:Create(beam, TweenInfo.new(lifetime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Width0 = 0,
-        Width1 = 0
+        Width0 = 0, Width1 = 0
     }):Play()
     TweenService:Create(glow, TweenInfo.new(lifetime * 0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Width0 = 0,
-        Width1 = 0
+        Width0 = 0, Width1 = 0
     }):Play()
     Debris:AddItem(folder, lifetime + 0.15)
 end
@@ -738,8 +759,6 @@ end)
 
 --====================================================================
 --  PROCESS SHOT (хук перехватывает аргументы GunFire)
---  1 muzzle, 2 camOrigin, 3 dir, 4 weaponName, 5 serverTime,
---  6 isADS, 7 sessionId, 8 sequence, 9 dronePose
 --====================================================================
 local lastShotData = {
     sessionId = nil,
@@ -853,7 +872,7 @@ task.spawn(function()
 end)
 
 --====================================================================
---  AUTO FIRE + RAPID FIRE (непрерывные, все патроны)
+--  AUTO FIRE + RAPID FIRE (непрерывные)
 --====================================================================
 local lastAutoFire = 0
 
@@ -941,16 +960,16 @@ end)
 --  HIT SOUNDS (рабочие ID)
 --====================================================================
 local SoundPresets = {
-    { Name = "Skeet",     ID = 140247876667835 },
+    { Name = "Skeet", ID = 140247876667835 },
     { Name = "Neverlose", ID = 139452805868562 },
-    { Name = "Bubble",    ID = 73862411420375  },
-    { Name = "Rust",      ID = 121566025787365 },
-    { Name = "M1 Garand", ID = 6111738677      },
-    { Name = "TF2 Crit",  ID = 8255306220      },
-    { Name = "Quake",     ID = 1455817260      },
-    { Name = "Osu",       ID = 7147454322      },
-    { Name = "CS2 Body",  ID = 4816576920      },
-    { Name = "CS2 Head",  ID = 1049219958      },
+    { Name = "Bubble", ID = 73862411420375 },
+    { Name = "Rust", ID = 121566025787365 },
+    { Name = "M1 Garand", ID = 6111738677 },
+    { Name = "TF2 Crit", ID = 8255306220 },
+    { Name = "Quake", ID = 1455817260 },
+    { Name = "Osu", ID = 7147454322 },
+    { Name = "CS2 Body", ID = 4816576920 },
+    { Name = "CS2 Head", ID = 1049219958 },
 }
 
 local function getSoundName(id)
@@ -980,7 +999,7 @@ task.spawn(function()
                 body.Volume = 0.35
             end
             if head then
-                body.SoundId = "rbxassetid://988593556"
+                head.SoundId = "rbxassetid://988593556"
                 head.Volume = 0.8
             end
         end
@@ -1071,7 +1090,6 @@ task.spawn(function()
             if typeof(pos) ~= "Vector3" then return end
             if typeof(part) ~= "Instance" or not part:IsA("BasePart") then part = nil end
             if typeof(lp2) ~= "Vector3" then lp2 = nil end
-            -- ПРОВЕРКА 2: выстрел зарегистрировался и попал
             confirmHitAndDrawLine(pos)
             if spawnMarkerFn then
                 spawnMarkerFn(pos, isHead == true, part, lp2)
@@ -1098,7 +1116,7 @@ end)
 --====================================================================
 
 --====================================================================
---  ASTRA PROJECT | FULL HUB v12
+--  ASTRA PROJECT | FULL HUB v13
 --  PART 2 / 2
 --  Вставь эту часть СРАЗУ после Части 1
 --====================================================================
@@ -1298,7 +1316,7 @@ task.spawn(function()
 end)
 
 --====================================================================
---  SKYBOXES (пресеты из базы знаний)
+--  SKYBOXES + FORCED VISUALS EVERY FRAME
 --====================================================================
 local SkyPresets = {
     Sunset = {
@@ -1599,10 +1617,6 @@ local function getOrMakeESP(p)
         end
         d.bones[i] = l
     end
-    d.sX = nil
-    d.sY = nil
-    d.sW = nil
-    d.sH = nil
     espData[p.UserId] = d
     return d
 end
@@ -1636,7 +1650,6 @@ local function updateESP()
         local dist = myRt and root and (myRt.Position - root.Position).Magnitude or math.huge
         if not C.EE or not isAlive or dist > C.ESPDist then
             hideAllESP(d)
-            d.sX = nil
             continue
         end
         local topSP, topOn = Cam:WorldToViewportPoint(head.Position + Vector3.new(0, 0.65, 0))
@@ -1771,7 +1784,7 @@ local function updateESP()
 end
 
 --====================================================================
---  MAIN RENDER LOOP (force visuals + ESP every frame)
+--  MAIN RENDER LOOP
 --====================================================================
 RunService.RenderStepped:Connect(function()
     forceVisualsEveryFrame()
@@ -2091,7 +2104,7 @@ TitleBar.Size = UDim2.new(1, 0, 0, 41)
 TitleBar.BackgroundColor3 = BG
 TitleBar.BorderSizePixel = 0
 TitleBar.Parent = Main
-Text(TitleBar, "ASTRA PROJECT | Silent Aim Hub v12", UDim2.fromOffset(12, 0), UDim2.new(1, -24, 1, 0), 14, WHITE)
+Text(TitleBar, "ASTRA PROJECT | Silent Aim Hub v13", UDim2.fromOffset(12, 0), UDim2.new(1, -24, 1, 0), 14, WHITE)
 Line(Main, 41)
 
 local Tabs = Instance.new("Frame")
@@ -2171,7 +2184,7 @@ ToggleButton.Parent = Side
 local SideSeparator = Instance.new("Frame")
 SideSeparator.Position = UDim2.fromOffset(0, 43)
 SideSeparator.Size = UDim2.new(1, 0, 0, 1)
-SideSeparator.BackgroundColor3 = ACCENT_C
+SideSeparator.BackgroundColor3 = ACCENT_COLOR
 SideSeparator.BorderSizePixel = 0
 SideSeparator.Parent = Side
 RegisterAccent(SideSeparator, "BackgroundColor3")
@@ -2230,7 +2243,7 @@ ResizeHandle.Size = UDim2.fromOffset(20, 20)
 ResizeHandle.BackgroundColor3 = BG
 ResizeHandle.BorderSizePixel = 0
 ResizeHandle.Text = "◢"
-ResizeHandle.TextColor3 = ACCENT_C
+ResizeHandle.TextColor3 = ACCENT_COLOR
 ResizeHandle.Font = Enum.Font.Code
 ResizeHandle.TextSize = 15
 ResizeHandle.AutoButtonColor = false
@@ -2285,7 +2298,7 @@ end
 --====================================================================
 --  GUI ELEMENT BUILDERS
 --====================================================================
-local function mkPanel(parent, title, x, y, w, h)
+local function mkPanel(parent, title, x, y, h)
     local panel = Instance.new("Frame")
     panel.Position = UDim2.fromOffset(x, y)
     panel.Size = UDim2.new(1, 0, 0, h)
@@ -2300,7 +2313,7 @@ local function mkPanel(parent, title, x, y, w, h)
     scroll.BackgroundTransparency = 1
     scroll.BorderSizePixel = 0
     scroll.ScrollBarThickness = 3
-    scroll.ScrollBarImageColor3 = ACCENT_C
+    scroll.ScrollBarImageColor3 = ACCENT_COLOR
     scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
     scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
     scroll.Parent = panel
@@ -2328,7 +2341,7 @@ local function mkToggle(parent, name, key, default, cb)
     local fill = Instance.new("Frame")
     fill.Position = UDim2.fromOffset(3, 3)
     fill.Size = UDim2.fromOffset(14, 14)
-    fill.BackgroundColor3 = ACCENT_C
+    fill.BackgroundColor3 = ACCENT_COLOR
     fill.BorderSizePixel = 0
     fill.Visible = default == true
     fill.Parent = btn
@@ -2360,7 +2373,7 @@ local function mkSlider(parent, name, key, min, max, def, isFloat, cb)
     Stroke(bar, 1)
     local fill = Instance.new("Frame")
     fill.Size = UDim2.new(math.clamp((def - min) / (max - min), 0, 1), 0, 1, 0)
-    fill.BackgroundColor3 = ACCENT_C
+    fill.BackgroundColor3 = ACCENT_COLOR
     fill.BorderSizePixel = 0
     fill.Parent = bar
     RegisterAccent(fill, "BackgroundColor3")
@@ -2583,7 +2596,7 @@ RGBLabel.ZIndex = 510
 local ApplyButton = Instance.new("TextButton")
 ApplyButton.Position = UDim2.fromOffset(10, 243)
 ApplyButton.Size = UDim2.fromOffset(256, 26)
-ApplyButton.BackgroundColor3 = ACCENT_C
+ApplyButton.BackgroundColor3 = ACCENT_COLOR
 ApplyButton.BorderSizePixel = 0
 ApplyButton.Text = "Apply"
 ApplyButton.TextColor3 = WHITE
@@ -2600,7 +2613,7 @@ local PickerCallback = nil
 local HueValue = 0
 local Saturation = 1
 local Brightness = 1
-local PendingColor = ACCENT_C
+local PendingColor = ACCENT_COLOR
 local PaletteDragging = false
 local HueDragging = false
 
@@ -2625,7 +2638,7 @@ end
 function OpenPicker(configKey, previewObj, callback)
     PickerTarget = configKey
     PickerCallback = callback
-    LoadColor(C[configKey] or ACCENT_C)
+    LoadColor(C[configKey] or ACCENT_COLOR)
     local viewport = Workspace.CurrentCamera.ViewportSize
     local px, py = 100, 150
     if previewObj and previewObj.AbsolutePosition then
@@ -2712,7 +2725,7 @@ cCol2.BackgroundTransparency = 1
 cCol2.BorderSizePixel = 0
 cCol2.Parent = combatArea
 
-local saPanel = mkPanel(cCol1, "Silent Aim", 0, 0, 0, 360)
+local saPanel = mkPanel(cCol1, "Silent Aim", 0, 0, 360)
 mkToggle(saPanel, "Silent Aim", "SA", C.SA)
 mkToggle(saPanel, "Wall Check", "WC", C.WC)
 mkToggle(saPanel, "Team Check", "TC", C.TC)
@@ -2728,7 +2741,7 @@ mkToggle(saPanel, "Snap Line", "SnapLine", C.SnapLine)
 mkColorBtn(saPanel, "Snap Color", "SnapColor")
 mkColorBtn(saPanel, "FOV Color", "FOVC")
 
-local afPanel = mkPanel(cCol1, "Auto Fire & Rapid", 0, 368, 0, 180)
+local afPanel = mkPanel(cCol1, "Auto Fire & Rapid", 0, 368, 180)
 mkToggle(afPanel, "Auto Fire", "AutoFire", C.AutoFire)
 mkSlider(afPanel, "AutoFire Cooldown", "AutoFireCD", 0.02, 0.5, C.AutoFireCD, true)
 mkToggle(afPanel, "AutoFire: Sound", "AutoFireSound", C.AutoFireSound)
@@ -2736,26 +2749,25 @@ mkToggle(afPanel, "AutoFire: Marker", "AutoFireMarker", C.AutoFireMarker)
 mkToggle(afPanel, "Rapid Fire", "RapidFire", C.RapidFire)
 mkSlider(afPanel, "RapidFire CD", "RapidFireCD", 0.015, 0.2, C.RapidFireCD, true)
 
-local wmPanel = mkPanel(cCol1, "Weapon Mods", 0, 556, 0, 130)
+local wmPanel = mkPanel(cCol1, "Weapon Mods", 0, 556, 130)
 mkToggle(wmPanel, "No Recoil", "NoRecoil", C.NoRecoil)
 mkToggle(wmPanel, "No Spread", "NoSpread", C.NoSpread)
 mkToggle(wmPanel, "Mute Shot", "MuteShot", C.MuteShot)
-mkToggle(wmPanel, "Mute Weapon Sounds", "MuteWeaponSounds", C.MuteWeaponSounds)
 
-local blPanel = mkPanel(cCol2, "Bullet Lines (on hit)", 0, 0, 0, 200)
+local blPanel = mkPanel(cCol2, "Bullet Lines (on hit)", 0, 0, 200)
 mkToggle(blPanel, "Enable Lines", "BL", C.BL)
 mkColorBtn(blPanel, "Line Color", "BLC")
 mkToggle(blPanel, "Rainbow", "BLRainbow", C.BLRainbow)
 mkSlider(blPanel, "Width", "BLW", 1, 20, C.BLW, false)
 mkSlider(blPanel, "Lifetime", "BLT", 0.1, 3, C.BLT, true)
 
-local hsPanel = mkPanel(cCol2, "Hit Sounds", 0, 208, 0, 150)
+local hsPanel = mkPanel(cCol2, "Hit Sounds", 0, 208, 150)
 mkToggle(hsPanel, "Custom Sounds", "HS", C.HS)
 mkDropdown(hsPanel, "Body Sound", "HSBody", SoundPresets, C.HSBody, true)
 mkDropdown(hsPanel, "Head Sound", "HSHead", SoundPresets, C.HSHead, true)
 mkSlider(hsPanel, "Volume", "HSVol", 0, 1, C.HSVol, true)
 
-local hmPanel = mkPanel(cCol2, "Hit Marker", 0, 366, 0, 220)
+local hmPanel = mkPanel(cCol2, "Hit Marker", 0, 366, 220)
 mkToggle(hmPanel, "Enable", "HM", C.HM)
 mkColorBtn(hmPanel, "Body Color", "HMBodyC")
 mkColorBtn(hmPanel, "Head Color", "HMHeadC")
@@ -2789,17 +2801,17 @@ vCol2.BackgroundTransparency = 1
 vCol2.BorderSizePixel = 0
 vCol2.Parent = visArea
 
-local worldPanel = mkPanel(vCol1, "World / Lighting", 0, 0, 0, 150)
+local worldPanel = mkPanel(vCol1, "World / Lighting", 0, 0, 150)
 mkToggle(worldPanel, "Fullbright", "FB", C.FB)
 mkToggle(worldPanel, "No Fog", "NF", C.NF)
 
-local skyPanel = mkPanel(vCol1, "Skybox", 0, 158, 0, 130)
+local skyPanel = mkPanel(vCol1, "Skybox", 0, 158, 130)
 mkToggle(skyPanel, "Skybox On", "SkyOn", C.SkyOn)
 mkDropdown(skyPanel, "Preset", "SkyChoice", { "Sunset", "Clouds", "PinkGalaxy", "Extra1", "Extra2", "NebulaViolet", "VoidBlack" }, C.SkyChoice, false, function()
     lastSkyChoice = nil
 end)
 
-local chamsPanel = mkPanel(vCol1, "Chams", 0, 296, 0, 300)
+local chamsPanel = mkPanel(vCol1, "Chams", 0, 296, 300)
 mkToggle(chamsPanel, "Gun Chams", "GunChams", C.GunChams)
 mkColorBtn(chamsPanel, "Gun Color", "GunChamsC")
 mkSlider(chamsPanel, "Gun Transparency", "GunChamsT", 0, 0.99, C.GunChamsT, true)
@@ -2810,7 +2822,7 @@ mkToggle(chamsPanel, "Player Chams", "EChams", C.EChams)
 mkColorBtn(chamsPanel, "Player Color", "EChamsC")
 mkSlider(chamsPanel, "Player Transparency", "EChamsT", 0, 0.99, C.EChamsT, true)
 
-local espPanel = mkPanel(vCol2, "ESP", 0, 0, 0, 450)
+local espPanel = mkPanel(vCol2, "ESP", 0, 0, 450)
 mkToggle(espPanel, "ESP On", "EE", C.EE)
 mkToggle(espPanel, "Rainbow", "ERainbow", C.ERainbow)
 mkToggle(espPanel, "Box", "EB", C.EB)
@@ -2848,21 +2860,21 @@ mCol2.BackgroundTransparency = 1
 mCol2.BorderSizePixel = 0
 mCol2.Parent = miscArea
 
-local slidePanel = mkPanel(mCol1, "Slide Hack", 0, 0, 0, 220)
+local slidePanel = mkPanel(mCol1, "Slide Hack", 0, 0, 220)
 mkToggle(slidePanel, "Slide Hack", "SlideOn", C.SlideOn)
 mkToggle(slidePanel, "Teleport Up", "SlideTP", C.SlideTP)
 mkSlider(slidePanel, "Slide Speed", "SlideSpeed", 16, 120, C.SlideSpeed, false)
 mkToggle(slidePanel, "Anti Detect (descend)", "AntiDetect", C.AntiDetect)
 
-local breachPanel = mkPanel(mCol1, "Breach Hook", 0, 228, 0, 120)
+local breachPanel = mkPanel(mCol1, "Breach Hook", 0, 228, 120)
 mkToggle(breachPanel, "No Cooldown", "BreachNoCD", C.BreachNoCD)
 
-local fcPanel = mkPanel(mCol2, "Free Cam", 0, 0, 0, 180)
+local fcPanel = mkPanel(mCol2, "Free Cam", 0, 0, 180)
 mkToggle(fcPanel, "Free Cam", "FreeCam", C.FreeCam)
 mkSlider(fcPanel, "Speed", "FreeCamSpeed", 10, 250, C.FreeCamSpeed, false)
 mkSlider(fcPanel, "Sensitivity", "FreeCamSens", 0.05, 0.5, C.FreeCamSens, true)
 
-local wlPanel = mkPanel(mCol2, "Whitelist", 0, 188, 0, 350)
+local wlPanel = mkPanel(mCol2, "Whitelist", 0, 188, 350)
 mkToggle(wlPanel, "Ignore Friends", "IgnoreFriends", C.IgnoreFriends, function()
     friendCache = {}
 end)
@@ -2888,7 +2900,7 @@ Stroke(wlBox, 1)
 local wlAddBtn = Instance.new("TextButton")
 wlAddBtn.Size = UDim2.fromOffset(40, 26)
 wlAddBtn.Position = UDim2.new(1, -44, 0, 2)
-wlAddBtn.BackgroundColor3 = ACCENT_C
+wlAddBtn.BackgroundColor3 = ACCENT_COLOR
 wlAddBtn.BorderSizePixel = 0
 wlAddBtn.Text = "+"
 wlAddBtn.TextColor3 = WHITE
@@ -2971,378 +2983,4 @@ end)
 refreshWlList()
 
 --====================================================================
---  BUILD SETTINGS TAB (Configs + Theme)
---====================================================================
-local settingsPage = Pages[4]
-local setArea = Instance.new("Frame")
-setArea.Position = UDim2.fromScale(0.008, 0.018)
-setArea.Size = UDim2.new(0.984, 0, 0.95, 0)
-setArea.BackgroundTransparency = 1
-setArea.BorderSizePixel = 0
-setArea.Parent = settingsPage
-
-local sCol1 = Instance.new("Frame")
-sCol1.Position = UDim2.fromScale(0, 0)
-sCol1.Size = UDim2.new(0.48, 0, 1, 0)
-sCol1.BackgroundTransparency = 1
-sCol1.BorderSizePixel = 0
-sCol1.Parent = setArea
-
-local sCol2 = Instance.new("Frame")
-sCol2.Position = UDim2.fromScale(0.52, 0)
-sCol2.Size = UDim2.new(0.48, 0, 1, 0)
-sCol2.BackgroundTransparency = 1
-sCol2.BorderSizePixel = 0
-sCol2.Parent = setArea
-
-local cfgPanel = mkPanel(sCol1, "Configs", 0, 0, 0, 460)
-
-local cfgNameRow = Instance.new("Frame")
-cfgNameRow.Size = UDim2.new(1, -4, 0, 30)
-cfgNameRow.BackgroundTransparency = 1
-cfgNameRow.Parent = cfgPanel
-local cfgBox = Instance.new("TextBox")
-cfgBox.Size = UDim2.new(1, -4, 1, -4)
-cfgBox.Position = UDim2.fromOffset(2, 2)
-cfgBox.BackgroundColor3 = BARBG
-cfgBox.BorderSizePixel = 0
-cfgBox.Text = "default"
-cfgBox.TextColor3 = WHITE
-cfgBox.PlaceholderText = "config name..."
-cfgBox.PlaceholderColor3 = GRAY
-cfgBox.Font = Enum.Font.Code
-cfgBox.TextSize = 12
-cfgBox.ClearTextOnFocus = false
-cfgBox.Parent = cfgNameRow
-Stroke(cfgBox, 1)
-
-local cfgBtnRow = Instance.new("Frame")
-cfgBtnRow.Size = UDim2.new(1, -4, 0, 30)
-cfgBtnRow.BackgroundTransparency = 1
-cfgBtnRow.Parent = cfgPanel
-local cfgBtnLayout = Instance.new("UIListLayout")
-cfgBtnLayout.FillDirection = Enum.FillDirection.Horizontal
-cfgBtnLayout.Padding = UDim.new(0, 6)
-cfgBtnLayout.Parent = cfgBtnRow
-
-local function getCfgPath(name)
-    return "astra_cfg_" .. tostring(name):gsub("[^%w_%-]", "_") .. ".json"
-end
-
-local function serializeC()
-    local t = {}
-    for k, v in pairs(C) do
-        if type(v) == "boolean" or type(v) == "number" then
-            t[k] = v
-        elseif type(v) == "string" then
-            t[k] = v
-        elseif typeof(v) == "Color3" then
-            t[k] = { __c = true, r = v.R, g = v.G, b = v.B }
-        end
-    end
-    return HttpService:JSONEncode(t)
-end
-
-local function deserializeC(json)
-    local ok, t = pcall(function()
-        return HttpService:JSONDecode(json)
-    end)
-    if not ok or type(t) ~= "table" then return false end
-    for k, v in pairs(t) do
-        if type(v) == "boolean" or type(v) == "number" then
-            C[k] = v
-        elseif type(v) == "string" then
-            C[k] = v
-        elseif type(v) == "table" and v.__c then
-            C[k] = Color3.new(v.r, v.g, v.b)
-        end
-    end
-    return true
-end
-
-local cfgListHolder = Instance.new("Frame")
-cfgListHolder.Size = UDim2.new(1, -4, 0, 0)
-cfgListHolder.BackgroundTransparency = 1
-cfgListHolder.BorderSizePixel = 0
-cfgListHolder.AutomaticSize = Enum.AutomaticSize.Y
-cfgListHolder.Parent = cfgPanel
-local cfgListLayout = Instance.new("UIListLayout")
-cfgListLayout.Padding = UDim.new(0, 3)
-cfgListLayout.Parent = cfgListHolder
-
-local function addCfgRow(filePath, name)
-    local row = Instance.new("Frame")
-    row.Size = UDim2.new(1, 0, 0, 28)
-    row.BackgroundColor3 = DROPBG
-    row.BorderSizePixel = 0
-    row.Parent = cfgListHolder
-    Stroke(row, 1)
-    local nameBtn = Instance.new("TextButton")
-    nameBtn.Size = UDim2.new(1, -70, 1, -4)
-    nameBtn.Position = UDim2.fromOffset(8, 2)
-    nameBtn.BackgroundTransparency = 1
-    nameBtn.Text = name
-    nameBtn.TextColor3 = WHITE
-    nameBtn.Font = Enum.Font.Code
-    nameBtn.TextSize = 12
-    nameBtn.TextXAlignment = Enum.TextXAlignment.Left
-    nameBtn.AutoButtonColor = false
-    nameBtn.Parent = row
-    nameBtn.MouseButton1Click:Connect(function()
-        cfgBox.Text = name
-    end)
-    local loadBtn = Instance.new("TextButton")
-    loadBtn.Size = UDim2.fromOffset(30, 22)
-    loadBtn.Position = UDim2.new(1, -64, 0.5, -11)
-    loadBtn.BackgroundColor3 = Color3.fromRGB(50, 130, 50)
-    loadBtn.BorderSizePixel = 0
-    loadBtn.Text = "⬇"
-    loadBtn.TextColor3 = WHITE
-    loadBtn.Font = Enum.Font.Code
-    loadBtn.TextSize = 12
-    loadBtn.AutoButtonColor = false
-    loadBtn.Parent = row
-    Corner(loadBtn, 3)
-    loadBtn.MouseButton1Click:Connect(function()
-        if not readfile then
-            notify("Astra", "readfile N/A", 3)
-            return
-        end
-        local ok, data = pcall(readfile, filePath)
-        if ok and data then
-            if deserializeC(data) then
-                notify("Astra", "Loaded: " .. name, 2)
-            else
-                notify("Astra", "Parse error", 3)
-            end
-        end
-    end)
-    local delBtn = Instance.new("TextButton")
-    delBtn.Size = UDim2.fromOffset(26, 22)
-    delBtn.Position = UDim2.new(1, -30, 0.5, -11)
-    delBtn.BackgroundColor3 = Color3.fromRGB(130, 40, 40)
-    delBtn.BorderSizePixel = 0
-    delBtn.Text = "✕"
-    delBtn.TextColor3 = WHITE
-    delBtn.Font = Enum.Font.Code
-    delBtn.TextSize = 11
-    delBtn.AutoButtonColor = false
-    delBtn.Parent = row
-    Corner(delBtn, 3)
-    delBtn.MouseButton1Click:Connect(function()
-        if delfile then pcall(delfile, filePath) end
-        row:Destroy()
-    end)
-end
-
-local function refreshCfgList()
-    for _, c in ipairs(cfgListHolder:GetChildren()) do
-        if c:IsA("Frame") then c:Destroy() end
-    end
-    if not listfiles then return end
-    local ok, files = pcall(listfiles, "")
-    if not ok or not files then return end
-    for _, f in ipairs(files) do
-        local name = f:match("astra_cfg_(.+)%.json")
-        if name then addCfgRow(f, name) end
-    end
-end
-
-local function mkCfgBtn(text, col, cb)
-    local b = Instance.new("TextButton")
-    b.Size = UDim2.fromOffset(100, 28)
-    b.BackgroundColor3 = col
-    b.BorderSizePixel = 0
-    b.Text = text
-    b.TextColor3 = WHITE
-    b.Font = Enum.Font.Code
-    b.TextSize = 12
-    b.AutoButtonColor = false
-    b.Parent = cfgBtnRow
-    Corner(b, 4)
-    Stroke(b, 1)
-    b.MouseButton1Click:Connect(cb)
-end
-
-mkCfgBtn("Save", ACCENT_C, function()
-    if not writefile then
-        notify("Astra", "writefile N/A", 3)
-        return
-    end
-    local name = cfgBox.Text:gsub("%s+", "")
-    if name == "" then
-        notify("Astra", "Enter name", 2)
-        return
-    end
-    local ok = pcall(writefile, getCfgPath(name), serializeC())
-    if ok then
-        notify("Astra", "Saved: " .. name, 2)
-        refreshCfgList()
-    else
-        notify("Astra", "Error", 3)
-    end
-end)
-
-mkCfgBtn("Load", Color3.fromRGB(50, 130, 50), function()
-    if not readfile then
-        notify("Astra", "readfile N/A", 3)
-        return
-    end
-    local name = cfgBox.Text:gsub("%s+", "")
-    if name == "" then
-        notify("Astra", "Enter name", 2)
-        return
-    end
-    local ok, data = pcall(readfile, getCfgPath(name))
-    if ok and data then
-        if deserializeC(data) then
-            notify("Astra", "Loaded: " .. name, 2)
-        else
-            notify("Astra", "Parse error", 3)
-        end
-    else
-        notify("Astra", "Not found: " .. name, 3)
-    end
-end)
-
-mkCfgBtn("Reset", Color3.fromRGB(130, 40, 40), function()
-    for k, v in pairs(DefC) do C[k] = v end
-    notify("Astra", "Reset", 2)
-end)
-
-mkCfgBtn("Refresh", Color3.fromRGB(60, 60, 70), function()
-    refreshCfgList()
-end)
-
-refreshCfgList()
-
-local themePanel = mkPanel(sCol2, "Theme", 0, 0, 0, 200)
-Text(themePanel, "Border Color", UDim2.fromOffset(10, 44), UDim2.fromOffset(140, 24), 13, WHITE)
-local BorderPreview = Instance.new("TextButton")
-BorderPreview.Position = UDim2.fromOffset(155, 42)
-BorderPreview.Size = UDim2.fromOffset(150, 28)
-BorderPreview.BackgroundColor3 = BORDER_C
-BorderPreview.BorderSizePixel = 0
-BorderPreview.Text = ""
-BorderPreview.AutoButtonColor = false
-BorderPreview.Parent = themePanel.Parent
-Stroke(BorderPreview, 1)
-
-Text(themePanel, "Accent Color", UDim2.fromOffset(10, 86), UDim2.fromOffset(140, 24), 13, WHITE)
-local AccentPreview = Instance.new("TextButton")
-AccentPreview.Position = UDim2.fromOffset(155, 84)
-AccentPreview.Size = UDim2.fromOffset(150, 28)
-AccentPreview.BackgroundColor3 = ACCENT_C
-AccentPreview.BorderSizePixel = 0
-AccentPreview.Text = ""
-AccentPreview.AutoButtonColor = false
-AccentPreview.Parent = themePanel.Parent
-Stroke(AccentPreview, 1)
-
-BorderPreview.MouseButton1Click:Connect(function()
-    OpenPicker("__border", BorderPreview, function(color)
-        SetBorderColor(color)
-        BorderPreview.BackgroundColor3 = BORDER_C
-    end)
-end)
-
-AccentPreview.MouseButton1Click:Connect(function()
-    OpenPicker("__accent", AccentPreview, function(color)
-        SetAccentColor(color)
-        AccentPreview.BackgroundColor3 = ACCENT_C
-    end)
-end)
-
-local infoPanel = mkPanel(sCol2, "Info", 0, 208, 0, 250)
-Text(infoPanel, "ASTRA HUB v12", UDim2.fromOffset(10, 44), UDim2.new(1, -20, 0, 22), 14, ACCENT_C)
-Text(infoPanel, "Silent Aim: GunFire hook", UDim2.fromOffset(10, 70), UDim2.new(1, -20, 0, 18), 11, GRAY)
-Text(infoPanel, "AutoFire: continuous", UDim2.fromOffset(10, 90), UDim2.new(1, -20, 0, 18), 11, GRAY)
-Text(infoPanel, "Bullet Lines: on hit only", UDim2.fromOffset(10, 110), UDim2.new(1, -20, 0, 18), 11, GRAY)
-Text(infoPanel, "FB/NF/Sky: forced per frame", UDim2.fromOffset(10, 130), UDim2.new(1, -20, 0, 18), 11, GRAY)
-Text(infoPanel, "TeamCheck: TeamSystem+ClanId", UDim2.fromOffset(10, 150), UDim2.new(1, -20, 0, 18), 11, GRAY)
-Text(infoPanel, "Slide: anti-detect descend", UDim2.fromOffset(10, 170), UDim2.new(1, -20, 0, 18), 11, GRAY)
-Text(infoPanel, "Breach Hook: no cooldown", UDim2.fromOffset(10, 190), UDim2.new(1, -20, 0, 18), 11, GRAY)
-
---====================================================================
---  MOBILE JOYSTICK FOR FREECAM
---====================================================================
-local joyBase = Instance.new("Frame")
-joyBase.Name = "FCamJ"
-joyBase.AnchorPoint = Vector2.new(0.5, 0.5)
-joyBase.Position = UDim2.fromOffset(115, Cam.ViewportSize.Y - 125)
-joyBase.Size = UDim2.fromOffset(110, 110)
-joyBase.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
-joyBase.BackgroundTransparency = 0.25
-joyBase.BorderSizePixel = 0
-joyBase.Visible = false
-joyBase.ZIndex = 2000
-joyBase.Parent = ScreenGui
-Corner(joyBase, 55)
-Stroke(joyBase, 1)
-
-local joyKnob = Instance.new("Frame")
-joyKnob.AnchorPoint = Vector2.new(0.5, 0.5)
-joyKnob.Position = UDim2.fromScale(0.5, 0.5)
-joyKnob.Size = UDim2.fromOffset(48, 48)
-joyKnob.BackgroundColor3 = ACCENT_C
-joyKnob.BackgroundTransparency = 0.1
-joyKnob.BorderSizePixel = 0
-joyKnob.ZIndex = 2001
-joyKnob.Parent = joyBase
-Corner(joyKnob, 24)
-RegisterAccent(joyKnob, "BackgroundColor3")
-
-local joyTouch = nil
-
-joyBase.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        joyTouch = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if joyTouch and input == joyTouch then
-        local center = joyBase.AbsolutePosition + joyBase.AbsoluteSize / 2
-        local delta = input.Position - center
-        local max = joyBase.AbsoluteSize.X / 2
-        local mag = math.min(delta.Magnitude, max)
-        local dir = delta.Magnitude > 0 and delta.Unit or Vector2.zero
-        local pos = dir * mag
-        joyKnob.Position = UDim2.fromOffset(joyBase.AbsoluteSize.X / 2 + pos.X, joyBase.AbsoluteSize.Y / 2 + pos.Y)
-        joyVector = Vector2.new(pos.X / max, pos.Y / max)
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if joyTouch and input == joyTouch then
-        joyTouch = nil
-        joyVector = Vector2.zero
-        joyKnob.Position = UDim2.fromScale(0.5, 0.5)
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    joyBase.Visible = C.FreeCam
-    joyBase.Position = UDim2.fromOffset(115, Cam.ViewportSize.Y - 125)
-end)
-
---====================================================================
---  FINAL INIT
---====================================================================
-SetBorderColor(Color3.fromRGB(255, 25, 25))
-SetAccentColor(Color3.fromRGB(255, 25, 25))
-BorderPreview.BackgroundColor3 = BORDER_C
-AccentPreview.BackgroundColor3 = ACCENT_C
-ApplyButton.BackgroundColor3 = ACCENT_C
-LoadColor(ACCENT_C)
-SelectTab(1)
-
-task.defer(function()
-    CenterMain()
-end)
-
-notify("ASTRA", "Hub v12 loaded", 3)
-
---====================================================================
---  END OF PART 2
---====================================================================
+-
