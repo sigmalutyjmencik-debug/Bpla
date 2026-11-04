@@ -14,7 +14,6 @@ local HttpService = game:GetService("HttpService")
 
 local LP = Players.LocalPlayer
 local Cam = Workspace.CurrentCamera
-
 Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
     Cam = Workspace.CurrentCamera
 end)
@@ -47,29 +46,75 @@ local newc = newcclosure or function(f) return f end
 local chkc = checkcaller or function() return false end
 
 local C = {
-    SA = true, WC = true, TC = true, ShowFOV = true, FOV = 140, Pr = true,
-    TargetPart = "Head", IgnoreFF = true, TargetDrones = true, SADist = 600,
-    MuzzleOffset = true, SnapLine = true,
+    SA = true,
+    WC = true,
+    TC = true,
+    ShowFOV = true,
+    FOV = 140,
+    Pr = true,
+    TargetPart = "Head",
+    IgnoreFF = true,
+    TargetDrones = true,
+    SADist = 600,
+    MuzzleOffset = true,
+    SnapLine = true,
     SnapColor = Color3.fromRGB(255, 80, 170),
     FOVC = Color3.fromRGB(255, 80, 170),
-    AutoFire = false, AutoFireCD = 0.07,
-    RapidFire = false, RapidFireCD = 0.03,
-    NoRecoil = true, NoSpread = true, MuteShot = true,
-    BL = true, BLC = Color3.fromRGB(200, 100, 255), BLRainbow = false, BLW = 4, BLT = 0.5,
-    HS = true, HSBody = 140247876667835, HSHead = 139452805868562, HSVol = 0.8,
-    HM = true, HMSize = 12, HMGap = 5, HMThick = 2, HMLife = 0.35,
-    HMBodyC = Color3.fromRGB(255, 255, 255), HMHeadC = Color3.fromRGB(255, 40, 80),
-    EE = true, EB = true, EN = true, EH = true, ED = true, EW = true,
-    ERainbow = false, ESkeleton = false,
-    EC = Color3.fromRGB(160, 100, 255), ENS = 14, ESPDist = 4000,
-    EChams = false, EChamsC = Color3.fromRGB(255, 80, 170), EChamsT = 0.55,
-    GunChams = true, GunChamsC = Color3.fromRGB(255, 80, 200), GunChamsT = 0.5,
-    HandChams = true, HandChamsC = Color3.fromRGB(160, 40, 255), HandChamsT = 0.5,
-    FB = true, NF = true,
-    SkyOn = true, SkyChoice = "Sunset",
-    SlideOn = true, SlideSpeed = 30, SlideTP = true, AntiDetect = true,
+    AutoFire = false,
+    AutoFireCD = 0.07,
+    RapidFire = false,
+    RapidFireCD = 0.03,
+    NoRecoil = true,
+    NoSpread = true,
+    MuteShot = true,
+    BL = true,
+    BLC = Color3.fromRGB(200, 100, 255),
+    BLRainbow = false,
+    BLW = 4,
+    BLT = 0.5,
+    HS = true,
+    HSBody = 140247876667835,
+    HSHead = 139452805868562,
+    HSVol = 0.8,
+    HM = true,
+    HMSize = 12,
+    HMGap = 5,
+    HMThick = 2,
+    HMLife = 0.35,
+    HMBodyC = Color3.fromRGB(255, 255, 255),
+    HMHeadC = Color3.fromRGB(255, 40, 80),
+    EE = true,
+    EB = true,
+    EN = true,
+    EH = true,
+    ED = true,
+    EW = true,
+    ERainbow = false,
+    ESkeleton = false,
+    EC = Color3.fromRGB(160, 100, 255),
+    ENS = 14,
+    ESPDist = 4000,
+    EChams = false,
+    EChamsC = Color3.fromRGB(255, 80, 170),
+    EChamsT = 0.55,
+    GunChams = true,
+    GunChamsC = Color3.fromRGB(255, 80, 200),
+    GunChamsT = 0.5,
+    HandChams = true,
+    HandChamsC = Color3.fromRGB(160, 40, 255),
+    HandChamsT = 0.5,
+    FB = true,
+    NF = true,
+    SkyOn = true,
+    SkyChoice = "Sunset",
+    SlideOn = true,
+    SlideSpeed = 30,
+    SlideTP = true,
+    AntiDetect = true,
     BreachNoCD = true,
-    FreeCam = false, FreeCamSpeed = 60, FreeCamSens = 0.18,
+    FreeCam = false,
+    FreeCamSpeed = 60,
+    FreeCamSens = 0.18,
     IgnoreFriends = false,
     Whitelist = {},
 }
@@ -92,12 +137,12 @@ local ACCENT_COLOR = Color3.fromRGB(255, 25, 25)
 local BorderRegistry = {}
 local AccentRegistry = {}
 
-local function RegisterBorder(obj, prop)
-    table.insert(BorderRegistry, {object = obj, property = prop or "Color"})
+local function RegisterBorder(obj, property)
+    BorderRegistry[#BorderRegistry + 1] = {object = obj, property = property or "Color"}
 end
 
-local function RegisterAccent(obj, prop)
-    table.insert(AccentRegistry, {object = obj, property = prop or "BackgroundColor3"})
+local function RegisterAccent(obj, property)
+    AccentRegistry[#AccentRegistry + 1] = {object = obj, property = property or "BackgroundColor3"}
 end
 
 local function SetBorderColor(color)
@@ -179,7 +224,9 @@ if TeamState then
         myTeamId = state.MyTeamId
         myTeamMembers = {}
         for _, member in ipairs(state.MyTeamMembers or {}) do
-            if member.UserId then myTeamMembers[member.UserId] = true end
+            if member.UserId then
+                myTeamMembers[member.UserId] = true
+            end
         end
     end)
 end
@@ -267,7 +314,12 @@ local function consumeSpread(st, S, isADS, t)
     local ads = S.ADSSpreadDegrees or base
     if isADS then base = ads or base end
     local rec = S.SpreadRecoveryPerSec or 0
-    local since = st.lastT > 0 and math.max(0, t - st.lastT) or math.huge
+    local since
+    if st.lastT > 0 then
+        since = math.max(0, t - st.lastT)
+    else
+        since = math.huge
+    end
     if rec > 0 then base = math.max(base, st.cur - rec * since) end
     local maxS = S.SpreadMaxDegrees or base
     local hipInc = S.HipSpreadIncreasePerShot
@@ -327,10 +379,17 @@ local function candidateParts(char)
     local tp = C.TargetPart
     local list = {}
     local function add(p) if p then list[#list + 1] = p end end
-    if tp == "Head" then add(head or root)
-    elseif tp == "Torso" then add(torso or root)
-    elseif tp == "HumanoidRootPart" then add(root)
-    else add(head) add(torso) add(root) end
+    if tp == "Head" then
+        add(head or root)
+    elseif tp == "Torso" then
+        add(torso or root)
+    elseif tp == "HumanoidRootPart" then
+        add(root)
+    else
+        add(head)
+        add(torso)
+        add(root)
+    end
     return list
 end
 
@@ -436,16 +495,18 @@ local function getBestMuzzle(targetPos)
     local root = ch:FindFirstChild("HumanoidRootPart")
     if not root then return Cam.CFrame.Position end
     local cf = root.CFrame
+    local rp = root.Position
     local offsets = {
         cf * Vector3.new(0, 4, 0),
         cf * Vector3.new(4, 1.5, 0),
         cf * Vector3.new(-4, 1.5, 0),
         cf * Vector3.new(0, 2, -3),
-        root.Position + Vector3.new(0, 6, 0),
+        rp + Vector3.new(0, 6, 0),
         Cam.CFrame.Position,
     }
     muzzleRay.FilterDescendantsInstances = {ch, Cam}
-    local best, bestScore = nil, math.huge
+    local best = nil
+    local bestScore = math.huge
     for _, candidate in ipairs(offsets) do
         local toTarget = targetPos - candidate
         local dist = toTarget.Magnitude
@@ -576,7 +637,10 @@ local function processShot(...)
     local sendDir, realDir = wanted, wanted
     if S and tool then
         local st = spreadState[tool]
-        if not st then st = {cur = 0, lastT = 0} spreadState[tool] = st end
+        if not st then
+            st = {cur = 0, lastT = 0}
+            spreadState[tool] = st
+        end
         local deg = consumeSpread(st, S, a[6] == true, a[5])
         local seed = tool:GetAttribute("GunSpreadSeed")
         if deg > 0 and seed ~= nil then
@@ -622,13 +686,15 @@ task.spawn(function()
     end
 end)
 
-local spawnMarkerFn = nil
 local lastAutoFire = 0
 
 RunService.Heartbeat:Connect(function()
     local shouldFire = false
     local fireCD = math.huge
-    if C.AutoFire then shouldFire = true fireCD = C.AutoFireCD end
+    if C.AutoFire then
+        shouldFire = true
+        fireCD = C.AutoFireCD
+    end
     if C.RapidFire then
         local holding = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
         if holding or UserInputService.TouchEnabled then
@@ -649,18 +715,24 @@ RunService.Heartbeat:Connect(function()
     lastAutoFire = tick()
     local muzzle = C.MuzzleOffset and getBestMuzzle(part.Position) or origin
     local dir = solveAim(muzzle, part, S)
-    registerPendingShot(muzzle, dir, (S and S.MaxDistance) or C.SADist)
+    local maxDist = (S and S.MaxDistance) or C.SADist or 600
+    registerPendingShot(muzzle, dir, maxDist)
     if GunFire then
         lastShotData.autoCount = lastShotData.autoCount + 1
         local serverTime = Workspace:GetServerTimeNow()
         local seq = (lastShotData.lastSeq or 0) + lastShotData.autoCount
         local sessionId = lastShotData.sessionId or tostring(math.random(100000, 999999))
         local st = spreadState[tool]
-        if not st then st = {cur = 0, lastT = 0} spreadState[tool] = st end
+        if not st then
+            st = {cur = 0, lastT = 0}
+            spreadState[tool] = st
+        end
         local deg = S and consumeSpread(st, S, false, serverTime) or 0
         local seed = tool:GetAttribute("GunSpreadSeed")
         local sendDir = dir
-        if deg > 0 and seed ~= nil and C.NoSpread then sendDir = compensate(dir, seed, seq, deg) end
+        if deg > 0 and seed ~= nil and C.NoSpread then
+            sendDir = compensate(dir, seed, seq, deg)
+        end
         pcall(function()
             GunFire:FireServer(muzzle, muzzle, sendDir, tool.Name, serverTime, false, sessionId, seq)
         end)
@@ -703,7 +775,7 @@ task.spawn(function()
     SnapGlow.Transparency = 0.7
     RunService.RenderStepped:Connect(function()
         if not Cam then return end
-        local center = Cam.ViewportSize / 2
+        local center = Vector2.new(Cam.ViewportSize.X / 2, Cam.ViewportSize.Y / 2)
         local vis = C.SA and C.ShowFOV
         CoreMain.Visible = vis
         CoreMain.Position = center
@@ -770,11 +842,19 @@ task.spawn(function()
     while true do
         task.wait(0.5)
         if C.HS then
-            if body then body.SoundId = assetId(C.HSBody) body.Volume = C.HSVol end
-            if head then head.SoundId = assetId(C.HSHead) head.Volume = C.HSVol end
+            if body then
+                body.SoundId = assetId(C.HSBody)
+                body.Volume = C.HSVol
+            end
+            if head then
+                head.SoundId = assetId(C.HSHead)
+                head.Volume = C.HSVol
+            end
         end
     end
 end)
+
+local spawnMarkerFn = nil
 
 task.spawn(function()
     local old = LP:WaitForChild("PlayerGui"):WaitForChild("LocalHitmarkerGui", 20)
@@ -938,35 +1018,57 @@ end)
 local SkyPresets = {
     Sunset = {
         ids = {Bk = 323493360, Dn = 323494252, Ft = 323494035, Lf = 323494130, Rt = 323494368, Up = 323494067},
-        time = 17.7, stars = 0, bodies = true, ambient = Color3.fromRGB(120, 85, 110),
+        time = 17.7, stars = 0, bodies = true,
+        ambient = Color3.fromRGB(120, 85, 110),
         atmos = {Density = 0.33, Offset = 0.25, Color = Color3.fromRGB(255, 175, 140), Decay = Color3.fromRGB(255, 105, 90), Glare = 0.5, Haze = 1.7},
         cc = {Brightness = 0.02, Contrast = 0.12, Saturation = 0.25, Tint = Color3.fromRGB(255, 228, 238)},
-        bloom = {Intensity = 0.55, Size = 30, Threshold = 0.85}, rays = 0.14,
+        bloom = {Intensity = 0.55, Size = 30, Threshold = 0.85},
+        rays = 0.14,
     },
     Clouds = {
         ids = {Bk = 144933338, Dn = 144931530, Ft = 144933262, Lf = 144933244, Rt = 144933299, Up = 144931564},
-        time = 14, stars = 0, bodies = true, ambient = Color3.fromRGB(110, 120, 140),
+        time = 14, stars = 0, bodies = true,
+        ambient = Color3.fromRGB(110, 120, 140),
         atmos = {Density = 0.28, Offset = 0.2, Color = Color3.fromRGB(190, 215, 255), Decay = Color3.fromRGB(150, 175, 230), Glare = 0.2, Haze = 1.2},
         cc = {Brightness = 0.01, Contrast = 0.1, Saturation = 0.2, Tint = Color3.fromRGB(240, 246, 255)},
-        bloom = {Intensity = 0.35, Size = 24, Threshold = 0.95}, rays = 0.08,
+        bloom = {Intensity = 0.35, Size = 24, Threshold = 0.95},
+        rays = 0.08,
     },
     PinkGalaxy = {
-        all = 159454299, time = 0, stars = 3000, bodies = false, ambient = Color3.fromRGB(90, 40, 100),
+        all = 159454299,
+        time = 0, stars = 3000, bodies = false,
+        ambient = Color3.fromRGB(90, 40, 100),
         atmos = {Density = 0.22, Offset = 0, Color = Color3.fromRGB(190, 90, 220), Decay = Color3.fromRGB(255, 90, 180), Glare = 0, Haze = 0.8},
         cc = {Brightness = 0.03, Contrast = 0.18, Saturation = 0.35, Tint = Color3.fromRGB(255, 215, 245)},
-        bloom = {Intensity = 0.8, Size = 36, Threshold = 0.75}, rays = 0,
+        bloom = {Intensity = 0.8, Size = 36, Threshold = 0.75},
+        rays = 0,
+    },
+    Extra1 = {
+        ids = {Bk = 2570432999, Dn = 2570433005, Ft = 2570432998, Lf = 2570433000, Rt = 2570432997, Up = 2570432996},
+        time = 13, stars = 0, bodies = true,
+        ambient = Color3.fromRGB(115, 115, 125),
+        atmos = {Density = 0.3, Offset = 0.2, Color = Color3.fromRGB(200, 205, 220), Decay = Color3.fromRGB(160, 165, 190), Glare = 0.2, Haze = 1.3},
+        cc = {Brightness = 0, Contrast = 0.1, Saturation = 0.15, Tint = Color3.fromRGB(245, 245, 255)},
+        bloom = {Intensity = 0.3, Size = 24, Threshold = 0.95},
+        rays = 0.06,
+    },
+    Extra2 = {
+        ids = {Bk = 92464172, Dn = 92464250, Ft = 92464217, Lf = 92464234, Rt = 92464189, Up = 92464157},
+        time = 13, stars = 0, bodies = true,
+        ambient = Color3.fromRGB(115, 115, 125),
+        atmos = {Density = 0.3, Offset = 0.2, Color = Color3.fromRGB(200, 205, 220), Decay = Color3.fromRGB(160, 165, 190), Glare = 0.2, Haze = 1.3},
+        cc = {Brightness = 0, Contrast = 0.1, Saturation = 0.15, Tint = Color3.fromRGB(245, 245, 255)},
+        bloom = {Intensity = 0.3, Size = 24, Threshold = 0.95},
+        rays = 0.06,
     },
     NebulaViolet = {
-        all = 6372755569, time = 0, stars = 5000, bodies = false, ambient = Color3.fromRGB(35, 15, 65),
+        all = 6372755569,
+        time = 0, stars = 5000, bodies = false,
+        ambient = Color3.fromRGB(35, 15, 65),
         atmos = {Density = 0.18, Offset = 0, Color = Color3.fromRGB(80, 30, 180), Decay = Color3.fromRGB(20, 5, 55), Glare = 0, Haze = 0},
         cc = {Brightness = 0.03, Contrast = 0.2, Saturation = 0.4, Tint = Color3.fromRGB(215, 190, 255)},
-        bloom = {Intensity = 0.9, Size = 38, Threshold = 0.75}, rays = 0,
-    },
-    VoidBlack = {
-        all = 323493180, time = 0, stars = 6000, bodies = false, ambient = Color3.fromRGB(5, 5, 8),
-        atmos = {Density = 0.08, Offset = 0, Color = Color3.fromRGB(15, 10, 30), Decay = Color3.fromRGB(3, 2, 8), Glare = 0, Haze = 0},
-        cc = {Brightness = 0, Contrast = 0.25, Saturation = 0.3, Tint = Color3.fromRGB(200, 200, 220)},
-        bloom = {Intensity = 1.1, Size = 44, Threshold = 0.7}, rays = 0,
+        bloom = {Intensity = 0.9, Size = 38, Threshold = 0.75},
+        rays = 0,
     },
 }
 
@@ -1007,6 +1109,9 @@ local function applySky()
     end
     sky.StarCount = p.stars
     sky.CelestialBodiesShown = p.bodies
+    Lighting.ClockTime = p.time
+    Lighting.Ambient = p.ambient
+    Lighting.OutdoorAmbient = p.ambient
     purgeOthers("Atmosphere", "AstraAtmos")
     local at = getOrCreate("Atmosphere", "AstraAtmos")
     at.Density = p.atmos.Density
@@ -1073,11 +1178,16 @@ end
 
 local espData = {}
 local BONES = {
-    {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
-    {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"},
-    {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"},
-    {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"},
-    {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}
+    {"Head", "UpperTorso"},
+    {"UpperTorso", "LowerTorso"},
+    {"UpperTorso", "LeftUpperArm"},
+    {"LeftUpperArm", "LeftLowerArm"},
+    {"UpperTorso", "RightUpperArm"},
+    {"RightUpperArm", "RightLowerArm"},
+    {"LowerTorso", "LeftUpperLeg"},
+    {"LeftUpperLeg", "LeftLowerLeg"},
+    {"LowerTorso", "RightUpperLeg"},
+    {"RightUpperLeg", "RightLowerLeg"}
 }
 
 Players.PlayerRemoving:Connect(function(p)
@@ -1224,14 +1334,12 @@ local function updateESP()
                             d.hpFill.Color = hpCol
                             d.hpFill.Visible = C.EH
                         end
-                        local yOff = 0
                         if C.EN and d.name then
                             d.name.Text = p.Name
                             d.name.Size = C.ENS
                             d.name.Color = rainbow
                             d.name.Position = Vector2.new(cx, bY - C.ENS - 5)
                             d.name.Visible = true
-                            yOff = yOff + C.ENS + 2
                         elseif d.name then
                             d.name.Visible = false
                         end
@@ -1239,7 +1347,7 @@ local function updateESP()
                             d.hp.Text = tostring(math.ceil(hum.Health)) .. " HP"
                             d.hp.Color = hpCol
                             d.hp.Size = 11
-                            d.hp.Position = Vector2.new(cx, bY - 14 - yOff)
+                            d.hp.Position = Vector2.new(cx, bY - 14 - C.ENS - 2)
                             d.hp.Visible = true
                         elseif d.hp then
                             d.hp.Visible = false
@@ -1383,7 +1491,11 @@ task.spawn(function()
             local a = {...}
             if a[1] == "Sliding" then
                 if a[2] == true and C.SlideOn then
-                    task.delay(math.random(1, 3) * 0.001, startSlide)
+                    if C.AntiDetect then
+                        task.delay(math.random(1, 3) * 0.001, startSlide)
+                    else
+                        startSlide()
+                    end
                 elseif a[2] == false then
                     blockUntil = 0
                     if isSliding then stopSlide() blockUntil = 0 end
@@ -1509,6 +1621,7 @@ if not ScreenGui.Parent then ScreenGui.Parent = guiParent() end
 local Main = Instance.new("Frame")
 Main.Name = "Main"
 Main.Size = UDim2.fromOffset(944, 593)
+Main.Position = UDim2.fromOffset(0, 0)
 Main.BackgroundColor3 = BG
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
@@ -1629,6 +1742,7 @@ local MainVisible = true
 ToggleButton.MouseButton1Click:Connect(function()
     MainVisible = not MainVisible
     Main.Visible = MainVisible
+    Side.Visible = MainVisible
     if not MainVisible and Picker then Picker.Visible = false end
 end)
 
@@ -2113,7 +2227,7 @@ mkColorBtn(saPanel, "FOV Color", "FOVC")
 
 local afPanel = mkPanel(c1, "Auto Fire", 0, 368, 200)
 mkToggle(afPanel, "Auto Fire", "AutoFire")
-mkSlider(afPanel, "AutoFire Cooldown", "AutoFireCD", 0.02, 0.5, true)
+mkSlider(afPanel, "AutoFire CD", "AutoFireCD", 0.02, 0.5, true)
 mkToggle(afPanel, "Rapid Fire", "RapidFire")
 mkSlider(afPanel, "RapidFire CD", "RapidFireCD", 0.015, 0.2, true)
 mkToggle(afPanel, "No Recoil", "NoRecoil")
@@ -2150,7 +2264,7 @@ mkToggle(worldPanel, "No Fog", "NF")
 
 local skyPanel = mkPanel(v1, "Skybox", 0, 128, 120)
 mkToggle(skyPanel, "Skybox On", "SkyOn")
-mkDropdown(skyPanel, "Preset", "SkyChoice", {"Sunset", "Clouds", "PinkGalaxy", "NebulaViolet", "VoidBlack"}, false, function()
+mkDropdown(skyPanel, "Preset", "SkyChoice", {"Sunset", "Clouds", "PinkGalaxy", "Extra1", "Extra2", "NebulaViolet"}, false, function()
     lastSkyChoice = nil
 end)
 
@@ -2615,6 +2729,10 @@ end
 
 SetBorderColor(Color3.fromRGB(255, 25, 25))
 SetAccentColor(Color3.fromRGB(255, 25, 25))
+BorderPreview.BackgroundColor3 = BORDER_COLOR
+AccentPreview.BackgroundColor3 = ACCENT_COLOR
+ApplyButton.BackgroundColor3 = ACCENT_COLOR
+UpdatePicker()
 SelectTab(1)
 task.defer(CenterMain)
-notify("ASTRA", "Loaded", 3)
+notify("ASTRA", "Hub loaded", 3)
