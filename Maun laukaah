@@ -1126,10 +1126,12 @@ end)
 --====================================================================
 task.spawn(function()
     if not Drawing then return end
+
     local GLOW_STEPS = 22
     local GLOW_INT = 0.05
     local OUTWARD = 18
     local INWARD = 12
+
     local function addRing(thickness, opacity)
         local ring = Drawing.new("Circle")
         ring.Visible = true
@@ -1140,6 +1142,7 @@ task.spawn(function()
         ring.NumSides = 144
         return ring
     end
+
     local OuterL = {}
     for i = 1, GLOW_STEPS do
         local f = i / GLOW_STEPS
@@ -1148,6 +1151,7 @@ task.spawn(function()
             Offset = (OUTWARD / GLOW_STEPS) * i
         }
     end
+
     local InnerL = {}
     for i = 1, GLOW_STEPS do
         local f = i / GLOW_STEPS
@@ -1156,37 +1160,45 @@ task.spawn(function()
             Offset = -(INWARD / GLOW_STEPS) * i
         }
     end
+
     local CoreMain = addRing(3, 0.3)
+
     local SnapLn = Drawing.new("Line")
     SnapLn.Visible = false
     SnapLn.Thickness = 1.5
     SnapLn.Color = C.SnapColor
+
     local SnapGlow = Drawing.new("Line")
     SnapGlow.Visible = false
     SnapGlow.Thickness = 6
     SnapGlow.Color = C.SnapColor
     SnapGlow.Transparency = 0.7
+
     RunService.RenderStepped:Connect(function()
         if not Cam or not CoreMain then return end
         local center = Vector2.new(Cam.ViewportSize.X / 2, Cam.ViewportSize.Y / 2)
         local vis = C.SA and C.ShowFOV
         local rad = C.FOV
+
         CoreMain.Visible = vis
         CoreMain.Position = center
         CoreMain.Radius = rad
         CoreMain.Color = C.FOVC
+
         for _, layer in ipairs(OuterL) do
             layer.Obj.Visible = vis
             layer.Obj.Position = center
             layer.Obj.Radius = rad + layer.Offset
             layer.Obj.Color = C.FOVC
         end
+
         for _, layer in ipairs(InnerL) do
             layer.Obj.Visible = vis
             layer.Obj.Position = center
             layer.Obj.Radius = rad + layer.Offset
             layer.Obj.Color = C.FOVC
         end
+
         local showSnap = false
         if C.SA and C.SnapLine then
             local origin = Cam.CFrame.Position
@@ -1206,6 +1218,7 @@ task.spawn(function()
                 end
             end
         end
+
         if not showSnap then
             SnapLn.Visible = false
             SnapGlow.Visible = false
@@ -1231,7 +1244,8 @@ local function setPartCham(part, fillC, fillT)
     hl.Adornee = part
     hl.FillColor = fillC
     hl.FillTransparency = fillT
-    hl.OutlineTransparency = 1
+    hl.OutlineColor = fillC:Lerp(Color3.new(1, 1, 1), 0.4)
+    hl.OutlineTransparency = 0.2
     hl.Enabled = true
     part.LocalTransparencyModifier = fillT
 end
@@ -1239,7 +1253,9 @@ end
 local function updateChams()
     local ch = LP.Character
     if not ch then return end
+
     local tool = ch:FindFirstChildOfClass("Tool")
+
     if C.GunChams and tool then
         local target = tool
         local vm = tool:FindFirstChild("ClientADSViewModel")
@@ -1254,11 +1270,13 @@ local function updateChams()
             pcall(setPartCham, target, C.GunChamsC, C.GunChamsT)
         end
     end
+
     local armNames = {
         "Left Arm", "Right Arm",
         "LeftHand", "LeftLowerArm", "LeftUpperArm",
         "RightHand", "RightLowerArm", "RightUpperArm"
     }
+
     if C.HandChams then
         for _, name in ipairs(armNames) do
             local part = ch:FindFirstChild(name)
@@ -1270,14 +1288,16 @@ local function updateChams()
             end
         end
     end
+
     for _, obj in ipairs(Cam:GetDescendants()) do
-        local name = obj.Name:lower():gsub("%s+", " ")
-        if name:find("hand") or name:find("arm") then
+        local nm = obj.Name:lower():gsub("%s+", " ")
+        if nm:find("hand") or nm:find("arm") then
             if C.HandChams then
                 pcall(setPartCham, obj, C.HandChamsC, C.HandChamsT)
             end
         end
     end
+
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= LP and p.Character then
             local hlName = "PCham" .. p.UserId
@@ -1291,7 +1311,8 @@ local function updateChams()
                 hl.Adornee = p.Character
                 hl.FillColor = C.EChamsC
                 hl.FillTransparency = C.EChamsT
-                hl.OutlineTransparency = 1
+                hl.OutlineColor = C.EChamsC:Lerp(Color3.new(1, 1, 1), 0.3)
+                hl.OutlineTransparency = 0.3
                 hl.Enabled = true
             elseif hl then
                 hl.Enabled = false
@@ -1316,7 +1337,7 @@ task.spawn(function()
 end)
 
 --====================================================================
---  SKYBOXES + FORCED VISUALS EVERY FRAME
+--  SKYBOXES
 --====================================================================
 local SkyPresets = {
     Sunset = {
@@ -1427,6 +1448,7 @@ local function applySky()
     Lighting.ClockTime = p.time
     Lighting.Ambient = p.ambient
     Lighting.OutdoorAmbient = p.ambient
+
     purgeOthers("Atmosphere", "AstraAtmos")
     local at = getOrCreate("Atmosphere", "AstraAtmos")
     at.Density = p.atmos.Density
@@ -1435,17 +1457,20 @@ local function applySky()
     at.Decay = p.atmos.Decay
     at.Glare = p.atmos.Glare
     at.Haze = p.atmos.Haze
+
     purgeOthers("ColorCorrectionEffect", "AstraCC")
     local cc = getOrCreate("ColorCorrectionEffect", "AstraCC")
     cc.Brightness = p.cc.Brightness
     cc.Contrast = p.cc.Contrast
     cc.Saturation = p.cc.Saturation
     cc.TintColor = p.cc.Tint
+
     purgeOthers("BloomEffect", "AstraBloom")
     local bl = getOrCreate("BloomEffect", "AstraBloom")
     bl.Intensity = p.bloom.Intensity
     bl.Size = p.bloom.Size
     bl.Threshold = p.bloom.Threshold
+
     purgeOthers("SunRaysEffect", "AstraRays")
     local sr = getOrCreate("SunRaysEffect", "AstraRays")
     sr.Intensity = p.rays
@@ -1545,6 +1570,7 @@ local function getOrMakeESP(p)
     d.hpBg = dN("Square")
     d.hpFill = dN("Square")
     d.bones = {}
+
     if d.boxShadow then
         d.boxShadow.Filled = false
         d.boxShadow.Visible = false
@@ -1638,39 +1664,45 @@ local function updateESP()
     if not Drawing then return end
     local myRt = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
     local rainbow = C.ERainbow and Color3.fromHSV((tick() * 0.25) % 1, 1, 1) or C.EC
+
     for _, p in ipairs(Players:GetPlayers()) do
         if p == LP then continue end
         local d = getOrMakeESP(p)
         if not d then continue end
+
         local pCh = p.Character
         local hum = pCh and pCh:FindFirstChildOfClass("Humanoid")
         local root = pCh and pCh:FindFirstChild("HumanoidRootPart")
         local head = pCh and pCh:FindFirstChild("Head")
         local isAlive = hum and root and head and hum.Health > 0
         local dist = myRt and root and (myRt.Position - root.Position).Magnitude or math.huge
+
         if not C.EE or not isAlive or dist > C.ESPDist then
             hideAllESP(d)
             continue
         end
+
         local topSP, topOn = Cam:WorldToViewportPoint(head.Position + Vector3.new(0, 0.65, 0))
         local botSP, botOn = Cam:WorldToViewportPoint(root.Position - Vector3.new(0, 2.8, 0))
+
         if not topOn or not botOn or topSP.Z <= 0 or botSP.Z <= 0 then
             hideAllESP(d)
             continue
         end
+
         local rawH = math.abs(botSP.Y - topSP.Y)
         local rawW = rawH * 0.52
-        local rawX = topSP.X - rawW / 2
-        local rawY = topSP.Y
-        local bX = rawX
-        local bY = rawY
+        local bX = topSP.X - rawW / 2
+        local bY = topSP.Y
         local bW = rawW
         local bH = rawH
         local cx = bX + bW / 2
+
         local frac = math.clamp(hum.Health / math.max(hum.MaxHealth, 1), 0, 1)
         local rr = math.min(255, math.floor(255 * (1 - frac) * 2))
         local gg = math.min(255, math.floor(255 * frac * 2))
         local hpCol = Color3.fromRGB(rr, gg, 30)
+
         if C.EB then
             if d.boxShadow then
                 d.boxShadow.Position = Vector2.new(bX - 1.5, bY - 1.5)
@@ -1687,6 +1719,7 @@ local function updateESP()
             if d.boxShadow then d.boxShadow.Visible = false end
             if d.box then d.box.Visible = false end
         end
+
         local barW = 4
         local barX = bX - barW - 3
         if d.hpBg then
@@ -1701,6 +1734,7 @@ local function updateESP()
             d.hpFill.Color = hpCol
             d.hpFill.Visible = C.EH
         end
+
         local yOff = 0
         if C.EN then
             if d.nameGlow then
@@ -1722,6 +1756,7 @@ local function updateESP()
             if d.name then d.name.Visible = false end
             if d.nameGlow then d.nameGlow.Visible = false end
         end
+
         if C.EH then
             if d.hp then
                 d.hp.Text = tostring(math.ceil(hum.Health)) .. " HP"
@@ -1733,6 +1768,7 @@ local function updateESP()
         else
             if d.hp then d.hp.Visible = false end
         end
+
         if C.ED then
             if d.dist then
                 d.dist.Text = "[" .. math.floor(dist) .. "m]"
@@ -1743,6 +1779,7 @@ local function updateESP()
         else
             if d.dist then d.dist.Visible = false end
         end
+
         if C.EW then
             local wep = pCh and pCh:FindFirstChildOfClass("Tool")
             if d.wep then
@@ -1753,6 +1790,7 @@ local function updateESP()
         else
             if d.wep then d.wep.Visible = false end
         end
+
         if C.ESkeleton then
             for i, bone in ipairs(BONES) do
                 local l = d.bones[i]
@@ -2016,18 +2054,10 @@ RunService.RenderStepped:Connect(function(dt)
         local rot = CFrame.Angles(0, math.rad(freecamYaw), 0) * CFrame.Angles(math.rad(freecamPitch), 0, 0)
         local cf = CFrame.new(freecamPos) * rot
         local move = Vector3.zero
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-            move = move + cf.LookVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-            move = move - cf.LookVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-            move = move + cf.RightVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-            move = move - cf.RightVector
-        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + cf.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - cf.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + cf.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - cf.RightVector end
         if UserInputService:IsKeyDown(Enum.KeyCode.Space) or UserInputService:IsKeyDown(Enum.KeyCode.E) then
             move = move + Vector3.new(0, 1, 0)
         end
@@ -2091,11 +2121,9 @@ local function CenterMain()
     if not camera then return end
     local viewport = camera.ViewportSize
     local scale = MainScale.Scale
-    local visualWidth = Main.Size.X.Offset * scale
-    local visualHeight = Main.Size.Y.Offset * scale
-    local x = (viewport.X - visualWidth) / 2
-    local y = (viewport.Y - visualHeight) / 2
-    Main.Position = UDim2.fromOffset(x, y)
+    local vw = Main.Size.X.Offset * scale
+    local vh = Main.Size.Y.Offset * scale
+    Main.Position = UDim2.fromOffset((viewport.X - vw) / 2, (viewport.Y - vh) / 2)
 end
 CenterMain()
 
@@ -2147,18 +2175,14 @@ end
 local Picker
 
 local function SelectTab(index)
-    for i, page in ipairs(Pages) do
-        page.Visible = i == index
-    end
+    for i, page in ipairs(Pages) do page.Visible = i == index end
     for i, button in ipairs(TabButtons) do
         button.TextColor3 = i == index and WHITE or GRAY
     end
     if Picker then Picker.Visible = false end
 end
 for i, button in ipairs(TabButtons) do
-    button.MouseButton1Click:Connect(function()
-        SelectTab(i)
-    end)
+    button.MouseButton1Click:Connect(function() SelectTab(i) end)
 end
 
 local Side = Instance.new("Frame")
@@ -2171,6 +2195,7 @@ local SideScale = Instance.new("UIScale")
 SideScale.Scale = 0.55
 SideScale.Parent = Side
 Stroke(Side, 1)
+
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Size = UDim2.new(1, 0, 0, 43)
 ToggleButton.BackgroundTransparency = 1
@@ -2181,6 +2206,7 @@ ToggleButton.Font = Enum.Font.Code
 ToggleButton.TextSize = 14
 ToggleButton.AutoButtonColor = false
 ToggleButton.Parent = Side
+
 local SideSeparator = Instance.new("Frame")
 SideSeparator.Position = UDim2.fromOffset(0, 43)
 SideSeparator.Size = UDim2.new(1, 0, 0, 1)
@@ -2188,6 +2214,7 @@ SideSeparator.BackgroundColor3 = ACCENT_COLOR
 SideSeparator.BorderSizePixel = 0
 SideSeparator.Parent = Side
 RegisterAccent(SideSeparator, "BackgroundColor3")
+
 local LockButton = Instance.new("TextButton")
 LockButton.Position = UDim2.fromOffset(0, 44)
 LockButton.Size = UDim2.new(1, 0, 0, 43)
@@ -2250,6 +2277,7 @@ ResizeHandle.AutoButtonColor = false
 ResizeHandle.ZIndex = 1000
 ResizeHandle.Parent = Main
 RegisterAccent(ResizeHandle, "TextColor3")
+
 local Resizing = false
 local ResizeStart, OriginalSize
 ResizeHandle.InputBegan:Connect(function(input)
@@ -2273,9 +2301,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
     if Resizing and not Locked then
         local delta = input.Position - ResizeStart
-        local newWidth = math.max(650, OriginalSize.X.Offset + delta.X)
-        local newHeight = math.max(400, OriginalSize.Y.Offset + delta.Y)
-        Main.Size = UDim2.fromOffset(newWidth, newHeight)
+        Main.Size = UDim2.fromOffset(math.max(650, OriginalSize.X.Offset + delta.X), math.max(400, OriginalSize.Y.Offset + delta.Y))
     end
 end)
 
@@ -2289,9 +2315,7 @@ end)
 
 if Workspace.CurrentCamera then
     Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-        if not MainDragging and not Resizing then
-            CenterMain()
-        end
+        if not MainDragging and not Resizing then CenterMain() end
     end)
 end
 
@@ -2618,8 +2642,7 @@ local PaletteDragging = false
 local HueDragging = false
 
 local function UpdatePicker()
-    local hueColor = Color3.fromHSV(HueValue, 1, 1)
-    Palette.BackgroundColor3 = hueColor
+    Palette.BackgroundColor3 = Color3.fromHSV(HueValue, 1, 1)
     PendingColor = Color3.fromHSV(HueValue, Saturation, Brightness)
     PaletteCursor.Position = UDim2.new(Saturation, 0, 1 - Brightness, 0)
     HueCursor.Position = UDim2.new(0.5, 0, HueValue, 0)
@@ -2701,7 +2724,7 @@ ApplyButton.MouseButton1Click:Connect(function()
 end)
 
 --====================================================================
---  BUILD COMBAT TAB
+--  BUILD TABS
 --====================================================================
 local combatPage = Pages[1]
 local combatArea = Instance.new("Frame")
@@ -2776,9 +2799,6 @@ mkSlider(hmPanel, "Gap", "HMGap", 1, 20, C.HMGap, false)
 mkSlider(hmPanel, "Thickness", "HMThick", 1, 6, C.HMThick, false)
 mkSlider(hmPanel, "Lifetime", "HMLife", 0.1, 1.5, C.HMLife, true)
 
---====================================================================
---  BUILD VISUALS TAB
---====================================================================
 local visualsPage = Pages[2]
 local visArea = Instance.new("Frame")
 visArea.Position = UDim2.fromScale(0.008, 0.018)
@@ -2835,9 +2855,6 @@ mkToggle(espPanel, "Weapon", "EW", C.EW)
 mkColorBtn(espPanel, "ESP Color", "EC")
 mkSlider(espPanel, "Name Size", "ENS", 8, 24, C.ENS, false)
 
---====================================================================
---  BUILD MISC TAB
---====================================================================
 local miscPage = Pages[3]
 local miscArea = Instance.new("Frame")
 miscArea.Position = UDim2.fromScale(0.008, 0.018)
@@ -2983,4 +3000,378 @@ end)
 refreshWlList()
 
 --====================================================================
--
+--  BUILD SETTINGS TAB
+--====================================================================
+local settingsPage = Pages[4]
+local setArea = Instance.new("Frame")
+setArea.Position = UDim2.fromScale(0.008, 0.018)
+setArea.Size = UDim2.new(0.984, 0, 0.95, 0)
+setArea.BackgroundTransparency = 1
+setArea.BorderSizePixel = 0
+setArea.Parent = settingsPage
+
+local sCol1 = Instance.new("Frame")
+sCol1.Position = UDim2.fromScale(0, 0)
+sCol1.Size = UDim2.new(0.48, 0, 1, 0)
+sCol1.BackgroundTransparency = 1
+sCol1.BorderSizePixel = 0
+sCol1.Parent = setArea
+
+local sCol2 = Instance.new("Frame")
+sCol2.Position = UDim2.fromScale(0.52, 0)
+sCol2.Size = UDim2.new(0.48, 0, 1, 0)
+sCol2.BackgroundTransparency = 1
+sCol2.BorderSizePixel = 0
+sCol2.Parent = setArea
+
+local cfgPanel = mkPanel(sCol1, "Configs", 0, 0, 460)
+
+local cfgNameRow = Instance.new("Frame")
+cfgNameRow.Size = UDim2.new(1, -4, 0, 30)
+cfgNameRow.BackgroundTransparency = 1
+cfgNameRow.Parent = cfgPanel
+local cfgBox = Instance.new("TextBox")
+cfgBox.Size = UDim2.new(1, -4, 1, -4)
+cfgBox.Position = UDim2.fromOffset(2, 2)
+cfgBox.BackgroundColor3 = BARBG
+cfgBox.BorderSizePixel = 0
+cfgBox.Text = "default"
+cfgBox.TextColor3 = WHITE
+cfgBox.PlaceholderText = "config name..."
+cfgBox.PlaceholderColor3 = GRAY
+cfgBox.Font = Enum.Font.Code
+cfgBox.TextSize = 12
+cfgBox.ClearTextOnFocus = false
+cfgBox.Parent = cfgNameRow
+Stroke(cfgBox, 1)
+
+local cfgBtnRow = Instance.new("Frame")
+cfgBtnRow.Size = UDim2.new(1, -4, 0, 30)
+cfgBtnRow.BackgroundTransparency = 1
+cfgBtnRow.Parent = cfgPanel
+local cfgBtnLayout = Instance.new("UIListLayout")
+cfgBtnLayout.FillDirection = Enum.FillDirection.Horizontal
+cfgBtnLayout.Padding = UDim.new(0, 6)
+cfgBtnLayout.Parent = cfgBtnRow
+
+local function getCfgPath(name)
+    return "astra_cfg_" .. tostring(name):gsub("[^%w_%-]", "_") .. ".json"
+end
+
+local function serializeC()
+    local t = {}
+    for k, v in pairs(C) do
+        if type(v) == "boolean" or type(v) == "number" then
+            t[k] = v
+        elseif type(v) == "string" then
+            t[k] = v
+        elseif typeof(v) == "Color3" then
+            t[k] = { __c = true, r = v.R, g = v.G, b = v.B }
+        end
+    end
+    return HttpService:JSONEncode(t)
+end
+
+local function deserializeC(json)
+    local ok, t = pcall(function()
+        return HttpService:JSONDecode(json)
+    end)
+    if not ok or type(t) ~= "table" then return false end
+    for k, v in pairs(t) do
+        if type(v) == "boolean" or type(v) == "number" then
+            C[k] = v
+        elseif type(v) == "string" then
+            C[k] = v
+        elseif type(v) == "table" and v.__c then
+            C[k] = Color3.new(v.r, v.g, v.b)
+        end
+    end
+    return true
+end
+
+local cfgListHolder = Instance.new("Frame")
+cfgListHolder.Size = UDim2.new(1, -4, 0, 0)
+cfgListHolder.BackgroundTransparency = 1
+cfgListHolder.BorderSizePixel = 0
+cfgListHolder.AutomaticSize = Enum.AutomaticSize.Y
+cfgListHolder.Parent = cfgPanel
+local cfgListLayout = Instance.new("UIListLayout")
+cfgListLayout.Padding = UDim.new(0, 3)
+cfgListLayout.Parent = cfgListHolder
+
+local function addCfgRow(filePath, name)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, 0, 0, 28)
+    row.BackgroundColor3 = DROPBG
+    row.BorderSizePixel = 0
+    row.Parent = cfgListHolder
+    Stroke(row, 1)
+    local nameBtn = Instance.new("TextButton")
+    nameBtn.Size = UDim2.new(1, -70, 1, -4)
+    nameBtn.Position = UDim2.fromOffset(8, 2)
+    nameBtn.BackgroundTransparency = 1
+    nameBtn.Text = name
+    nameBtn.TextColor3 = WHITE
+    nameBtn.Font = Enum.Font.Code
+    nameBtn.TextSize = 12
+    nameBtn.TextXAlignment = Enum.TextXAlignment.Left
+    nameBtn.AutoButtonColor = false
+    nameBtn.Parent = row
+    nameBtn.MouseButton1Click:Connect(function()
+        cfgBox.Text = name
+    end)
+    local loadBtn = Instance.new("TextButton")
+    loadBtn.Size = UDim2.fromOffset(30, 22)
+    loadBtn.Position = UDim2.new(1, -64, 0.5, -11)
+    loadBtn.BackgroundColor3 = Color3.fromRGB(50, 130, 50)
+    loadBtn.BorderSizePixel = 0
+    loadBtn.Text = "⬇"
+    loadBtn.TextColor3 = WHITE
+    loadBtn.Font = Enum.Font.Code
+    loadBtn.TextSize = 12
+    loadBtn.AutoButtonColor = false
+    loadBtn.Parent = row
+    Corner(loadBtn, 3)
+    loadBtn.MouseButton1Click:Connect(function()
+        if not readfile then
+            notify("Astra", "readfile N/A", 3)
+            return
+        end
+        local ok, data = pcall(readfile, filePath)
+        if ok and data then
+            if deserializeC(data) then
+                notify("Astra", "Loaded: " .. name, 2)
+            else
+                notify("Astra", "Parse error", 3)
+            end
+        end
+    end)
+    local delBtn = Instance.new("TextButton")
+    delBtn.Size = UDim2.fromOffset(26, 22)
+    delBtn.Position = UDim2.new(1, -30, 0.5, -11)
+    delBtn.BackgroundColor3 = Color3.fromRGB(130, 40, 40)
+    delBtn.BorderSizePixel = 0
+    delBtn.Text = "✕"
+    delBtn.TextColor3 = WHITE
+    delBtn.Font = Enum.Font.Code
+    delBtn.TextSize = 11
+    delBtn.AutoButtonColor = false
+    delBtn.Parent = row
+    Corner(delBtn, 3)
+    delBtn.MouseButton1Click:Connect(function()
+        if delfile then pcall(delfile, filePath) end
+        row:Destroy()
+    end)
+end
+
+local function refreshCfgList()
+    for _, c in ipairs(cfgListHolder:GetChildren()) do
+        if c:IsA("Frame") then c:Destroy() end
+    end
+    if not listfiles then return end
+    local ok, files = pcall(listfiles, "")
+    if not ok or not files then return end
+    for _, f in ipairs(files) do
+        local name = f:match("astra_cfg_(.+)%.json")
+        if name then addCfgRow(f, name) end
+    end
+end
+
+local function mkCfgBtn(text, col, cb)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.fromOffset(100, 28)
+    b.BackgroundColor3 = col
+    b.BorderSizePixel = 0
+    b.Text = text
+    b.TextColor3 = WHITE
+    b.Font = Enum.Font.Code
+    b.TextSize = 12
+    b.AutoButtonColor = false
+    b.Parent = cfgBtnRow
+    Corner(b, 4)
+    Stroke(b, 1)
+    b.MouseButton1Click:Connect(cb)
+end
+
+mkCfgBtn("Save", ACCENT_COLOR, function()
+    if not writefile then
+        notify("Astra", "writefile N/A", 3)
+        return
+    end
+    local name = cfgBox.Text:gsub("%s+", "")
+    if name == "" then
+        notify("Astra", "Enter name", 2)
+        return
+    end
+    local ok = pcall(writefile, getCfgPath(name), serializeC())
+    if ok then
+        notify("Astra", "Saved: " .. name, 2)
+        refreshCfgList()
+    else
+        notify("Astra", "Error", 3)
+    end
+end)
+
+mkCfgBtn("Load", Color3.fromRGB(50, 130, 50), function()
+    if not readfile then
+        notify("Astra", "readfile N/A", 3)
+        return
+    end
+    local name = cfgBox.Text:gsub("%s+", "")
+    if name == "" then
+        notify("Astra", "Enter name", 2)
+        return
+    end
+    local ok, data = pcall(readfile, getCfgPath(name))
+    if ok and data then
+        if deserializeC(data) then
+            notify("Astra", "Loaded: " .. name, 2)
+        else
+            notify("Astra", "Parse error", 3)
+        end
+    else
+        notify("Astra", "Not found: " .. name, 3)
+    end
+end)
+
+mkCfgBtn("Reset", Color3.fromRGB(130, 40, 40), function()
+    for k, v in pairs(DefC) do C[k] = v end
+    notify("Astra", "Reset", 2)
+end)
+
+mkCfgBtn("Refresh", Color3.fromRGB(60, 60, 70), function()
+    refreshCfgList()
+end)
+
+refreshCfgList()
+
+local themePanel = mkPanel(sCol2, "Theme", 0, 0, 200)
+Text(themePanel, "Border Color", UDim2.fromOffset(10, 44), UDim2.fromOffset(140, 24), 13, WHITE)
+local BorderPreview = Instance.new("TextButton")
+BorderPreview.Position = UDim2.fromOffset(155, 42)
+BorderPreview.Size = UDim2.fromOffset(150, 28)
+BorderPreview.BackgroundColor3 = BORDER_COLOR
+BorderPreview.BorderSizePixel = 0
+BorderPreview.Text = ""
+BorderPreview.AutoButtonColor = false
+BorderPreview.Parent = themePanel.Parent
+Stroke(BorderPreview, 1)
+
+Text(themePanel, "Accent Color", UDim2.fromOffset(10, 86), UDim2.fromOffset(140, 24), 13, WHITE)
+local AccentPreview = Instance.new("TextButton")
+AccentPreview.Position = UDim2.fromOffset(155, 84)
+AccentPreview.Size = UDim2.fromOffset(150, 28)
+AccentPreview.BackgroundColor3 = ACCENT_COLOR
+AccentPreview.BorderSizePixel = 0
+AccentPreview.Text = ""
+AccentPreview.AutoButtonColor = false
+AccentPreview.Parent = themePanel.Parent
+Stroke(AccentPreview, 1)
+
+BorderPreview.MouseButton1Click:Connect(function()
+    OpenPicker("__border", BorderPreview, function(color)
+        SetBorderColor(color)
+        BorderPreview.BackgroundColor3 = BORDER_COLOR
+    end)
+end)
+
+AccentPreview.MouseButton1Click:Connect(function()
+    OpenPicker("__accent", AccentPreview, function(color)
+        SetAccentColor(color)
+        AccentPreview.BackgroundColor3 = ACCENT_COLOR
+    end)
+end)
+
+local infoPanel = mkPanel(sCol2, "Info", 0, 208, 250)
+Text(infoPanel, "ASTRA HUB v13", UDim2.fromOffset(10, 44), UDim2.new(1, -20, 0, 22), 14, ACCENT_COLOR)
+Text(infoPanel, "Silent Aim: GunFire hook", UDim2.fromOffset(10, 70), UDim2.new(1, -20, 0, 18), 11, GRAY)
+Text(infoPanel, "AutoFire: continuous", UDim2.fromOffset(10, 90), UDim2.new(1, -20, 0, 18), 11, GRAY)
+Text(infoPanel, "Bullet Lines: on hit only", UDim2.fromOffset(10, 110), UDim2.new(1, -20, 0, 18), 11, GRAY)
+Text(infoPanel, "FB/NF/Sky: forced per frame", UDim2.fromOffset(10, 130), UDim2.new(1, -20, 0, 18), 11, GRAY)
+Text(infoPanel, "TeamCheck: TeamSystem+ClanId", UDim2.fromOffset(10, 150), UDim2.new(1, -20, 0, 18), 11, GRAY)
+Text(infoPanel, "Slide: anti-detect descend", UDim2.fromOffset(10, 170), UDim2.new(1, -20, 0, 18), 11, GRAY)
+Text(infoPanel, "Breach Hook: no cooldown", UDim2.fromOffset(10, 190), UDim2.new(1, -20, 0, 18), 11, GRAY)
+
+--====================================================================
+--  MOBILE JOYSTICK FOR FREECAM
+--====================================================================
+local joyBase = Instance.new("Frame")
+joyBase.Name = "FCamJ"
+joyBase.AnchorPoint = Vector2.new(0.5, 0.5)
+joyBase.Position = UDim2.fromOffset(115, Cam.ViewportSize.Y - 125)
+joyBase.Size = UDim2.fromOffset(110, 110)
+joyBase.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+joyBase.BackgroundTransparency = 0.25
+joyBase.BorderSizePixel = 0
+joyBase.Visible = false
+joyBase.ZIndex = 2000
+joyBase.Parent = ScreenGui
+Corner(joyBase, 55)
+Stroke(joyBase, 1)
+
+local joyKnob = Instance.new("Frame")
+joyKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+joyKnob.Position = UDim2.fromScale(0.5, 0.5)
+joyKnob.Size = UDim2.fromOffset(48, 48)
+joyKnob.BackgroundColor3 = ACCENT_COLOR
+joyKnob.BackgroundTransparency = 0.1
+joyKnob.BorderSizePixel = 0
+joyKnob.ZIndex = 2001
+joyKnob.Parent = joyBase
+Corner(joyKnob, 24)
+RegisterAccent(joyKnob, "BackgroundColor3")
+
+local joyTouch = nil
+
+joyBase.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        joyTouch = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if joyTouch and input == joyTouch then
+        local center = joyBase.AbsolutePosition + joyBase.AbsoluteSize / 2
+        local delta = input.Position - center
+        local max = joyBase.AbsoluteSize.X / 2
+        local mag = math.min(delta.Magnitude, max)
+        local dir = delta.Magnitude > 0 and delta.Unit or Vector2.zero
+        local pos = dir * mag
+        joyKnob.Position = UDim2.fromOffset(joyBase.AbsoluteSize.X / 2 + pos.X, joyBase.AbsoluteSize.Y / 2 + pos.Y)
+        joyVector = Vector2.new(pos.X / max, pos.Y / max)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if joyTouch and input == joyTouch then
+        joyTouch = nil
+        joyVector = Vector2.zero
+        joyKnob.Position = UDim2.fromScale(0.5, 0.5)
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    joyBase.Visible = C.FreeCam
+    joyBase.Position = UDim2.fromOffset(115, Cam.ViewportSize.Y - 125)
+end)
+
+--====================================================================
+--  FINAL INIT
+--====================================================================
+SetBorderColor(Color3.fromRGB(255, 25, 25))
+SetAccentColor(Color3.fromRGB(255, 25, 25))
+BorderPreview.BackgroundColor3 = BORDER_COLOR
+AccentPreview.BackgroundColor3 = ACCENT_COLOR
+ApplyButton.BackgroundColor3 = ACCENT_COLOR
+LoadColor(ACCENT_COLOR)
+SelectTab(1)
+
+task.defer(function()
+    CenterMain()
+end)
+
+notify("ASTRA", "Hub v13 loaded", 3)
+
+--====================================================================
+--  END OF PART 2 / END OF FULL HUB
+--====================================================================
